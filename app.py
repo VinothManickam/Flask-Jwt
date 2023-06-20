@@ -10,12 +10,16 @@ app.config['SECRET_KEY'] = 'Thisissecretkey'
 def check_for_token(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        token = request.args.get('token')
+        token = request.headers.get('Authorization')
         if not token:
-            return jsonify({'message': 'Missing token'}), 403
+            return {'message': 'Token is missing'}, 401
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'])
-        except:
+            print(app.config['SECRET_KEY'])
+            print(token)
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            print(data)
+        except jwt.InvalidTokenError as e:
+            print("Invalid token:", e)
             return jsonify({'message': 'Invalid token'}), 403
         return func(*args, **kwargs)
     return wrapped
@@ -43,8 +47,8 @@ def login():
         token = jwt.encode({
             'user': request.form['username'],
             'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
-        }, app.config['SECRET_KEY'])
-        return jsonify({'token': token.decode('UTF-8')})
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        return jsonify({'token': token})
     else:
         return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
 
