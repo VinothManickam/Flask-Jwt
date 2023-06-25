@@ -1,79 +1,58 @@
-import React, { useState, useEffect } from 'react';
+from flask import Flask, jsonify, request, session, make_response, render_template
+from functools import wraps
+import jwt
+import datetime
+from flask_cors import CORS
 
-function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [token, setToken] = useState('');
+app = Flask(__name__)
+CORS(app, origins='https://stackblitz-starters-aphhzj.stackblitz.io')
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      setLoggedIn(true);
-    }
-  }, []);
+app.config['SECRET_KEY'] = 'Thisissecretkey'
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch('https://welcome-yehr.onrender.com/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: 'your_username',
-          password: 'your_password',
-        }),
-      });
+def check_for_token(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return {'message': 'Token is missing'}, 401
+        try:
+            print(app.config['SECRET_KEY'])
+            print(token)
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            print(data)
+        except jwt.InvalidTokenError as e:
+            print("Invalid token:", e)
+            return jsonify({'message': 'Invalid token'}), 403
+        return func(*args, **kwargs)
+    return wrapped
 
-      const { token } = await response.json();
-      setToken(token);
-      localStorage.setItem('token', token);
-      setLoggedIn(true);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+@app.route('/')
+def index():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return 'Currently logged in'
 
-  const handleLogout = () => {
-    setToken('');
-    localStorage.removeItem('token');
-    setLoggedIn(false);
-  };
+@app.route('/public')
+def public():
+    return 'Anyone can view this'
 
-  const handleAuthorizedRequest = async () => {
-    try {
-      const response = await fetch('https://welcome-yehr.onrender.com/auth', {
-        headers: {
-          Authorization: token,
-        },
-      });
+@app.route('/auth')
+@check_for_token
+def authorised():
+    return 'This is only viewable with a token'
 
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+@app.route('/login', methods=['POST'])
+def login():
+    if request.form['username'] and request.form['password'] == 'password':
+        session['logged_in'] = True
+        token = jwt.encode({
+            'user': request.form['username'],
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        return jsonify({'token': token})
+    else:
+        return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
 
-  return (
-    <div className="App">
-      <h1>React Flask API Demo</h1>
-      {loggedIn ? (
-        <div>
-          <p>You are logged in.</p>
-          <button onClick={handleAuthorizedRequest}>
-            Make Authorized Request
-          </button>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      ) : (
-        <div>
-          <p>You are not logged in.</p>
-          <button onClick={handleLogin}>Login</button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default App;
+if __name__ == '__main__':
+    app.run(debug=True)
