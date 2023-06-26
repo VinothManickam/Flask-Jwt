@@ -58,7 +58,7 @@ def login():
         }, app.config['SECRET_KEY'], algorithm='HS256')
         return jsonify({'token': token.decode('utf-8')})
     else:
-        return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'}) make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
+        return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
 
 if __name__ == '__main__':
     app.run(debug=True)
