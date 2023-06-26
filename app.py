@@ -41,7 +41,7 @@ def public():
 @check_for_token
 def authorised():
     return 'This is only viewable with a token'
- @app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     if not request.is_json:
         return jsonify({"error": "Invalid JSON data"}), 400
