@@ -53,7 +53,7 @@ def login():
     if username and password == 'password':
         session['logged_in'] = True
         token = jwt.encode({
-            'user': username,
+            'user': username
             'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
         }, app.config['SECRET_KEY'], algorithm='HS256')
         return jsonify({'token': token.decode('utf-8')})
