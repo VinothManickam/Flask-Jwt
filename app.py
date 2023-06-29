@@ -28,15 +28,6 @@ def check_for_token(func):
         return func(*args, **kwargs)
     return wrapped
 
-
-@app.route('/')
-def index():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        return 'Currently logged in'
-
-
 @app.route('/public')
 def public():
     return 'Anyone can view this'
