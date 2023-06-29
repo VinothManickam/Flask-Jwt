@@ -42,22 +42,17 @@ def public():
 def authorised():
     return 'This is only viewable with a token'
 @app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    if not request.is_json:
-        return jsonify({"error": "Invalid JSON data"}), 400
-
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-
-    if username and password == 'password':
+    if request.form['username'] and request.form['password'] == 'password':
         session['logged_in'] = True
         token = jwt.encode({
-            'user': username,
+            'user': request.form['username'],
             'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
         }, app.config['SECRET_KEY'], algorithm='HS256')
-        return jsonify({'token': token.decode('utf-8')})
+        return jsonify({'token': token})
     else:
         return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
+
 if __name__ == '__main__':
     app.run(debug=True)
