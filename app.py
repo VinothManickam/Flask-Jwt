@@ -59,6 +59,5 @@ def login():
     else:
         return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
 
-
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True)
