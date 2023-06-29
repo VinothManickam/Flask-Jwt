@@ -4,10 +4,11 @@ import jwt
 import datetime
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(_name_)
 CORS(app)
 
 app.config['SECRET_KEY'] = 'Thisissecretkey'
+
 
 def check_for_token(func):
     @wraps(func)
@@ -18,13 +19,15 @@ def check_for_token(func):
         try:
             print(app.config['SECRET_KEY'])
             print(token)
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            data = jwt.decode(
+                token, app.config['SECRET_KEY'], algorithms=['HS256'])
             print(data)
         except jwt.InvalidTokenError as e:
             print("Invalid token:", e)
             return jsonify({'message': 'Invalid token'}), 403
         return func(*args, **kwargs)
     return wrapped
+
 
 @app.route('/')
 def index():
@@ -33,26 +36,37 @@ def index():
     else:
         return 'Currently logged in'
 
+
 @app.route('/public')
 def public():
     return 'Anyone can view this'
+
 
 @app.route('/auth')
 @check_for_token
 def authorised():
     return 'This is only viewable with a token'
-@app.route('/login', methods=['POST'])
+
+
 @app.route('/login', methods=['POST'])
 def login():
-    if request.form['username'] and request.form['password'] == 'password':
+    if not request.is_json:
+        return jsonify({"error": "Invalid JSON data"}), 400
+
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if username and password == 'password':
         session['logged_in'] = True
         token = jwt.encode({
-            'user': request.form['username'],
+            'user': username,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
         }, app.config['SECRET_KEY'], algorithm='HS256')
         return jsonify({'token': token})
     else:
         return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
 
-if __name__ == '__main__':
+
+if _name_ == '_main_':
     app.run(debug=True)
