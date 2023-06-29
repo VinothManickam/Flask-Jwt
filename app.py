@@ -5,7 +5,6 @@ import datetime
 from flask_cors import CORS
 
 app = Flask(__name__)
-
 CORS(app)
 
 app.config['SECRET_KEY'] = 'Thisissecretkey'
@@ -28,6 +27,14 @@ def check_for_token(func):
             return jsonify({'message': 'Invalid token'}), 403
         return func(*args, **kwargs)
     return wrapped
+
+
+
+@app.route('/')
+def index():
+    return 'new'
+
+
 
 @app.route('/public')
 def public():
@@ -58,6 +65,7 @@ def login():
         return jsonify({'token': token})
     else:
         return make_response('Unable to verify', 403, {'www-Authenticate': 'Basic realm="login Required"'})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
