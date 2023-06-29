@@ -4,7 +4,8 @@ import jwt
 import datetime
 from flask_cors import CORS
 
-app = Flask(_name_)
+app = Flask(__name__)
+
 CORS(app)
 
 app.config['SECRET_KEY'] = 'Thisissecretkey'
