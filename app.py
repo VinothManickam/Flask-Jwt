@@ -29,22 +29,21 @@ def check_for_token(func):
     return wrapped
 
 
-
 @app.route('/')
 def index():
-    return 'new'
-
-
+    data = {
+        'message': 'new'
+    }
+    return jsonify(data)
 
 @app.route('/public')
 def public():
-    return 'Anyone can view this'
-
+    return jsonify(message='Anyone can view this')
 
 @app.route('/auth')
 @check_for_token
 def authorised():
-    return 'This is only viewable with a token'
+    return jsonify(message='This is only viewable with a token')
 
 
 @app.route('/login', methods=['POST'])
